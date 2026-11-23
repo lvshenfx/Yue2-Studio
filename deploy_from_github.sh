@@ -9,6 +9,10 @@
 #   源码：本地已有 -> 云盘副本 -> GitHub clone
 #   模型：本地已有 -> 云盘副本 -> 网络下载（ModelScope；paraformer 无 HF 源）
 #   .venv：每次重建（保证干净可靠，pip 源够快）
+#
+#   内置补丁（重启自动重新应用，无需手动改代码）：
+#   · T4 GPU 阈值 8.0 -> 7.5（让 T4 默认走 cuda）
+#   · 解码 budget 24 -> 12（长音频 VAE 解码避免主机内存 OOM）
 # ============================================================
 set -uo pipefail
 
@@ -128,6 +132,21 @@ if old in s:
     print('[patch] 已应用 T4 GPU 阈值补丁 (8.0 -> 7.5)')
 else:
     print('[patch] 补丁已存在或代码结构已变化，跳过')
+PYEOF
+
+# --- 5.5 解码内存补丁（budget 24 -> 12，避免长音频解码 OOM）------------
+say "检查解码内存补丁 ..."
+"$PY" - <<'PYEOF'
+from pathlib import Path
+p = Path('app/server.py')
+s = p.read_text(encoding='utf-8')
+old = '    common = {"model": str(MODEL_DIR), "vae": str(VAE_DIR), "budget": 24}'
+new = '    common = {"model": str(MODEL_DIR), "vae": str(VAE_DIR), "budget": 12}'
+if old in s:
+    p.write_text(s.replace(old, new, 1), encoding='utf-8')
+    print('[patch] 已应用解码内存补丁 (budget 24 -> 12)，避免长音频解码 OOM')
+else:
+    print('[patch] 解码内存补丁已存在或代码结构已变化，跳过')
 PYEOF
 
 # --- 6. 启动服务 --------------------------------------------------------

@@ -824,7 +824,7 @@ def _load_locked(device: str) -> str:
     global CUDA_BLOCKED
     MODEL.update(state="loading", reason="")
     broadcast({"event": "model", "model": model_status_dict()})
-    common = {"model": str(MODEL_DIR), "vae": str(VAE_DIR), "budget": 24}
+    common = {"model": str(MODEL_DIR), "vae": str(VAE_DIR), "budget": 12}
     try:
         event = send({"cmd": "load", "device": device, **common}, 900)
     except Exception as exc:
