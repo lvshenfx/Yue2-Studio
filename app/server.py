@@ -250,8 +250,8 @@ def probe_gpu() -> dict:
         log.warning("无法解析 nvidia-smi 输出：%s", line[:200])
         return {"available": True, "suitable": False, "name": line, "compute_capability": None,
                 "reason": "无法读取 GPU 信息"}
-    if capability < 8.0:
-        suitable, reason = False, f"{name} 不支持 BF16（算力 {capability:.1f}），使用 CPU"
+    if capability < 7.5:
+        suitable, reason = False, f"{name} 算力 {capability:.1f} 过低，使用 CPU"
     elif free_gib < MIN_FREE_GIB:
         suitable, reason = False, f"{name} 空闲显存 {free_gib:.1f} GiB，低于 {MIN_FREE_GIB:.0f} GiB，使用 CPU"
     else:
